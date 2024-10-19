@@ -1,5 +1,8 @@
 #:schema node_modules/wrangler/config-schema.json
 name = "salla-case-study-billing-app"
+account_id = "496c1d73b28387cd32e5888a3e074827"
+workers_dev = true
+
 main = "src/index.ts"
 compatibility_date = "2024-10-11"
 
