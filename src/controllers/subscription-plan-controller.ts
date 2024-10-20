@@ -2,7 +2,7 @@ import { Context } from 'hono';
 
 const createSubscriptionPlan = async (c: Context) => {
 	try {
-		const kv = c.env.SUBSCRIPTION_KV as KVNamespace;
+		const kv = c.env.SUBSCRIPTION_PLAN_KV as KVNamespace;
 		const plan = await c.req.json();
 		plan.id = crypto.randomUUID();
 
@@ -16,7 +16,7 @@ const createSubscriptionPlan = async (c: Context) => {
 
 const getAllSubscriptionPlans = async (c: Context) => {
 	try {
-		const kv = c.env.SUBSCRIPTION_KV as KVNamespace;
+		const kv = c.env.SUBSCRIPTION_PLAN_KV as KVNamespace;
 		const plansList = await kv.list();
 
 		// Fetch the values based on the keys
@@ -35,7 +35,7 @@ const getAllSubscriptionPlans = async (c: Context) => {
 
 const getSubscriptionPlan = async (c: Context) => {
 	try {
-		const kv = c.env.SUBSCRIPTION_KV as KVNamespace;
+		const kv = c.env.SUBSCRIPTION_PLAN_KV as KVNamespace;
 		const planId = c.req.param('id');
 
 		const planData = await kv.get(planId);
@@ -51,7 +51,7 @@ const getSubscriptionPlan = async (c: Context) => {
 
 const updateSubscriptionPlan = async (c: Context) => {
 	try {
-		const kv = c.env.SUBSCRIPTION_KV as KVNamespace;
+		const kv = c.env.SUBSCRIPTION_PLAN_KV as KVNamespace;
 		const subscriptionId = c.req.param('id');
 		const planDetailsToUpdate = await c.req.json();
 
@@ -80,7 +80,7 @@ const updateSubscriptionPlan = async (c: Context) => {
 
 const deleteSubscriptionPlan = async (c: Context) => {
 	try {
-		const kv = c.env.SUBSCRIPTION_KV as KVNamespace;
+		const kv = c.env.SUBSCRIPTION_PLAN_KV as KVNamespace;
 		const planId = c.req.param('id');
 
 		const planData = await kv.get(planId);

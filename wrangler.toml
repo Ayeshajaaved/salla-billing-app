@@ -8,7 +8,7 @@ compatibility_date = "2024-10-11"
 [env.dev]
 kv_namespaces = [
     { binding = "CUSTOMER_KV", id = "${CUSTOMER_KV_ID}" },
-    { binding = "SUBSCRIPTION_KV", id = "${SUBSCRIPTION_KV_ID}" },
+    { binding = "SUBSCRIPTION_PLAN_KV", id = "${SUBSCRIPTION_PLAN_KV}" },
     { binding = "INVOICE_KV", id = "${INVOICE_KV_ID}" },
     { binding = "PAYMENT_KV", id = "${PAYMENT_KV_ID}" },
 ]

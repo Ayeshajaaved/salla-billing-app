@@ -78,7 +78,7 @@ const updateCustomer = async (c: Context) => {
 const deleteCustomer = async (c: Context) => {
 	try {
 		const kv = c.env.CUSTOMER_KV as KVNamespace;
-		const plansKv = c.env.SUBSCRIPTION_KV as KVNamespace;
+		const plansKv = c.env.SUBSCRIPTION_PLAN_KV as KVNamespace;
 		const invoicesKv = c.env.INVOICE_KV as KVNamespace;
 
 		const customerId = c.req.param('id');
@@ -114,7 +114,7 @@ const deleteCustomer = async (c: Context) => {
 
 const assignSubscriptionPlanToCustomer = async (c: Context) => {
 	try {
-		const kv = c.env.SUBSCRIPTION_KV as KVNamespace;
+		const kv = c.env.SUBSCRIPTION_PLAN_KV as KVNamespace;
 		const customerKv = c.env.CUSTOMER_KV as KVNamespace;
 
 		const customerId = c.req.param('customerId');
