@@ -4,6 +4,7 @@ import {
 	getCustomer,
 	getAllCustomers,
 	updateCustomer,
+	assignSubscriptionPlanToCustomer,
 	createSubscriptionPlan,
 	getAllSubscriptionPlans,
 	getSubscriptionPlan,
@@ -28,12 +29,13 @@ app.post('/api/customers', createCustomer);
 app.get('/api/customers/:id', getCustomer);
 app.get('/api/customers', getAllCustomers);
 app.put('/api/customers/:id', updateCustomer);
+app.post('api/customers/:customerId/assign-subscription', assignSubscriptionPlanToCustomer);
 
 // Subscription Plan APIs
-app.post('/api/subscriptions', createSubscriptionPlan);
-app.get('/api/subscriptions/:id', getSubscriptionPlan);
-app.get('/api/subscriptions', getAllSubscriptionPlans);
-app.put('/api/subscriptions/:id', updateSubscriptionPlan);
+app.post('/api/subscription-plans', createSubscriptionPlan);
+app.get('/api/subscription-plans/:id', getSubscriptionPlan);
+app.get('/api/subscription-plans', getAllSubscriptionPlans);
+app.put('/api/subscription-plans/:id', updateSubscriptionPlan);
 
 // Invoice APIs
 app.post('/api/invoices', generateInvoice);
