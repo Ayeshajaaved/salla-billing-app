@@ -2,13 +2,16 @@ import { Context, Hono } from 'hono';
 import {
 	createCustomer,
 	getCustomer,
-	getCustomers,
+	getAllCustomers,
 	updateCustomer,
 	createSubscriptionPlan,
-	getSubscriptionPlans,
+	getAllSubscriptionPlans,
 	getSubscriptionPlan,
 	updateSubscriptionPlan,
 	//deleteSubscriptionPlan,
+	generateInvoice,
+	getAllInvoices,
+	listInvoicesByCustomer,
 } from './controllers';
 const app = new Hono();
 
@@ -31,16 +34,21 @@ app.get('/test', (c: Context) => {
 });
 
 // Customer APIs
-app.get('/api/customers', getCustomers);
 app.post('/api/customers', createCustomer);
 app.get('/api/customers/:id', getCustomer);
+app.get('/api/customers', getAllCustomers);
 app.put('/api/customers/:id', updateCustomer);
 
 // Subscription Plan APIs
-app.get('/api/subscriptions', getSubscriptionPlans);
 app.post('/api/subscriptions', createSubscriptionPlan);
 app.get('/api/subscriptions/:id', getSubscriptionPlan);
+app.get('/api/subscriptions', getAllSubscriptionPlans);
 app.put('/api/subscriptions/:id', updateSubscriptionPlan);
+
+// Invoice APIs
+app.post('/api/invoices', generateInvoice);
+app.get('/api/invoices', getAllInvoices);
+app.get('/api/invoices/customer/:customerId', listInvoicesByCustomer);
 
 app.all('*', (c) => {
 	return c.text('The provided endpoint is not registered or does not exist.', { status: 404 });

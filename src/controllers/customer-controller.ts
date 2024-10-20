@@ -30,7 +30,7 @@ const getCustomer = async (c: Context) => {
 	}
 };
 
-const getCustomers = async (c: Context) => {
+const getAllCustomers = async (c: Context) => {
 	try {
 		const kv = c.env.CUSTOMER_KV as KVNamespace;
 
@@ -75,29 +75,47 @@ const updateCustomer = async (c: Context) => {
 	}
 };
 
-//const deleteCustomer = async (c: Context) => {
-//	try {
-//			const kv = c.env.CUSTOMER_KV as KVNamespace;
-//			const customerId = c.req.param('id');
+const deleteCustomer = async (c: Context) => {
+	try {
+		const kv = c.env.CUSTOMER_KV as KVNamespace;
+		const plansKv = c.env.SUBSCRIPTION_KV as KVNamespace;
+		const invoicesKv = c.env.INVOICE_KV as KVNamespace;
 
-//			const existingCustomerData = await kv.get(customerId);
-//			if (!existingCustomerData) {
-//					return c.json({ success: false, message: 'Customer not found' }, 404);
-//			}
+		const customerId = c.req.param('id');
 
-//			// Delete the customer data from KV
-//			await kv.delete(customerId);
+		// Check if the customer exists
+		const customerData = await kv.get(customerId);
+		if (!customerData) {
+			return c.json({ success: false, message: 'Customer not found' }, 404);
+		}
 
-//			return c.json({ success: true, message: 'Customer deleted successfully' });
-//	} catch (error) {
-//			return new Response(`Error deleting customer: ${(error as Error).message}`, { status: 500 });
-//	}
-//};
+		// Delete associated subscription plans
+		const plansList = await plansKv.list();
+		await Promise.all(
+			plansList.keys.filter((plan: { name: string }) => plan.name.startsWith(customerId)).map((plan) => plansKv.delete(plan.name))
+		);
+
+		// Delete associated invoices
+		const invoicesList = await invoicesKv.list();
+		await Promise.all(
+			invoicesList.keys
+				.filter((invoice: { name: string }) => invoice.name.startsWith(customerId))
+				.map((invoice) => invoicesKv.delete(invoice.name))
+		);
+
+		// Delete the customer
+		await kv.delete(customerId);
+
+		return c.json({ success: true, message: 'Customer and associated data has been deleted successfully!' });
+	} catch (error) {
+		return new Response(`Error deleting customer: ${(error as Error).message}`, { status: 500 });
+	}
+};
 
 export {
 	createCustomer,
 	getCustomer,
-	getCustomers,
+	getAllCustomers,
 	updateCustomer,
 	//deleteCustomer,
 };

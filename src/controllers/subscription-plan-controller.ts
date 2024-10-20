@@ -14,7 +14,7 @@ const createSubscriptionPlan = async (c: Context) => {
 	}
 };
 
-const getSubscriptionPlans = async (c: Context) => {
+const getAllSubscriptionPlans = async (c: Context) => {
 	try {
 		const kv = c.env.SUBSCRIPTION_KV as KVNamespace;
 		const plansList = await kv.list();
@@ -88,4 +88,4 @@ const deleteSubscriptionPlan = async (c: Context) => {
 	}
 };
 
-export { createSubscriptionPlan, getSubscriptionPlans, getSubscriptionPlan, updateSubscriptionPlan, deleteSubscriptionPlan };
+export { createSubscriptionPlan, getAllSubscriptionPlans, getSubscriptionPlan, updateSubscriptionPlan, deleteSubscriptionPlan };
