@@ -12,21 +12,11 @@ import {
 	generateInvoice,
 	getAllInvoices,
 	listInvoicesByCustomer,
+	createPayment,
+	getPayment,
+	//listPaymentsByCustomer,
 } from './controllers';
 const app = new Hono();
-
-//app.get('/', (c) => c.text('Hono!'));
-
-//app.get('/test', (c: Context) => {
-//	console.log(c.env); // Log the environment to see available bindings
-//	return c.json({ success: true, binding: c.env.CUSTOMER_KV !== undefined });
-//});
-
-//app.get('/test', (c) => {
-//	console.log('Request received at /test');
-//	console.log('Available Environment:', c.env);
-//	return c.json({ success: true });
-//});
 
 app.get('/test', (c: Context) => {
 	console.log('Available Environment:', JSON.stringify(c.env, null, 2));
@@ -49,6 +39,10 @@ app.put('/api/subscriptions/:id', updateSubscriptionPlan);
 app.post('/api/invoices', generateInvoice);
 app.get('/api/invoices', getAllInvoices);
 app.get('/api/invoices/customer/:customerId', listInvoicesByCustomer);
+
+// Payment APIs
+app.post('/api/payments', createPayment);
+app.get('/api/payments/:id', getPayment);
 
 app.all('*', (c) => {
 	return c.text('The provided endpoint is not registered or does not exist.', { status: 404 });

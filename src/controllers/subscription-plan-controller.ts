@@ -52,19 +52,28 @@ const getSubscriptionPlan = async (c: Context) => {
 const updateSubscriptionPlan = async (c: Context) => {
 	try {
 		const kv = c.env.SUBSCRIPTION_KV as KVNamespace;
-		const planId = c.req.param('id');
-		const existingPlanData = await kv.get(planId);
+		const subscriptionId = c.req.param('id');
+		const planDetailsToUpdate = await c.req.json();
 
-		if (!existingPlanData) {
-			return c.json({ success: false, message: 'Plan not found' }, 404);
+		const currentSubscriptionData = await kv.get(subscriptionId);
+		if (!currentSubscriptionData) {
+			return c.json({ success: false, message: 'No subscription plan found to update.' }, 404);
 		}
 
-		const updatedData = await c.req.json();
-		const updatedPlan = { ...JSON.parse(existingPlanData), ...updatedData }; // Merge existing and new data
+		const currentSubscription = JSON.parse(currentSubscriptionData);
+		const previousPlanId = currentSubscription.planId;
 
-		await kv.put(planId, JSON.stringify(updatedPlan));
+		currentSubscription.planId = crypto.randomUUID(); // new Plan ID
+		currentSubscription.previousPlanId = previousPlanId
+		currentSubscription.updatedAt = new Date().toISOString();
 
-		return c.json({ success: true, plan: updatedPlan });
+		// Save the updated subscription back to KV
+		await kv.put(subscriptionId, JSON.stringify(currentSubscription));
+
+		// Do I need to generate invoice for updated plan?
+
+		
+		return c.json({ success: true, message: 'Subscription plan updated successfully', subscription: currentSubscription });
 	} catch (error) {
 		return new Response(`Error updating subscription plan: ${(error as Error).message}`, { status: 500 });
 	}
