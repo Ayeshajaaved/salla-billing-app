@@ -64,7 +64,7 @@ const updateSubscriptionPlan = async (c: Context) => {
 		const previousPlanId = currentSubscription.planId;
 
 		currentSubscription.planId = crypto.randomUUID(); // new Plan ID
-		currentSubscription.previousPlanId = previousPlanId
+		currentSubscription.previousPlanId = previousPlanId;
 		currentSubscription.updatedAt = new Date().toISOString();
 
 		// Save the updated subscription back to KV
@@ -72,7 +72,6 @@ const updateSubscriptionPlan = async (c: Context) => {
 
 		// Do I need to generate invoice for updated plan?
 
-		
 		return c.json({ success: true, message: 'Subscription plan updated successfully', subscription: currentSubscription });
 	} catch (error) {
 		return new Response(`Error updating subscription plan: ${(error as Error).message}`, { status: 500 });
@@ -97,4 +96,10 @@ const deleteSubscriptionPlan = async (c: Context) => {
 	}
 };
 
-export { createSubscriptionPlan, getAllSubscriptionPlans, getSubscriptionPlan, updateSubscriptionPlan, deleteSubscriptionPlan };
+export {
+	createSubscriptionPlan,
+	getAllSubscriptionPlans,
+	getSubscriptionPlan,
+	updateSubscriptionPlan,
+	deleteSubscriptionPlan,
+};

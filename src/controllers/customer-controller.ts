@@ -112,10 +112,53 @@ const deleteCustomer = async (c: Context) => {
 	}
 };
 
+const assignSubscriptionPlanToCustomer = async (c: Context) => {
+	try {
+		const kv = c.env.SUBSCRIPTION_KV as KVNamespace;
+		const customerKv = c.env.CUSTOMER_KV as KVNamespace;
+
+		const customerId = c.req.param('customerId');
+		if (!customerId) {
+			return new Response('CustomerId could not be extracted.', { status: 400 });
+		}
+
+		const { subscriptionPlanId } = await c.req.json();
+		if (!subscriptionPlanId) {
+			return new Response('SubscriptionPlanId is missing or invalid.', { status: 400 });
+		}
+
+		const customerData = await customerKv.get(customerId);
+		if (!customerData) {
+			return c.json({ success: false, message: 'Customer not found' }, 404);
+		}
+
+		
+
+		const customer: Customer = JSON.parse(customerData);
+
+		const subscriptionPlanData = await kv.get(subscriptionPlanId);
+		if (!subscriptionPlanData) {
+			return c.json({ success: false, message: 'Subscription plan not found' }, 404);
+		}
+
+		// Update the customer's subscription details
+		customer.currentSubscriptionPlanId = subscriptionPlanId;
+		customer.subscriptionStatus = 'active';
+
+		// Save the updated customer back to KV
+		await customerKv.put(customerId, JSON.stringify(customer));
+
+		return c.json({ success: true, message: 'Subscription plan assigned to customer successfully!', customer });
+	} catch (error) {
+		return new Response(`Error assigning subscription plan: ${(error as Error).message}`, { status: 500 });
+	}
+};
+
 export {
 	createCustomer,
 	getCustomer,
 	getAllCustomers,
 	updateCustomer,
+	assignSubscriptionPlanToCustomer,
 	//deleteCustomer,
 };

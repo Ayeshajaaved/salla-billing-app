@@ -2,6 +2,7 @@ export interface Customer {
 	id: string;
 	name: string;
 	email: string;
-	subscriptionPlanId?: string;
+	currentSubscriptionPlanId?: string;
+	previousSubscriptionPlanId?: string;
 	subscriptionStatus: 'active' | 'cancelled';
 }
