@@ -1,33 +1,15 @@
 import { Payment } from '../models';
 
-const calculateProratedAmount = (currentPlanPrice: number, newPlanPrice: number, daysUsed: number, totalDaysInCycle: number): number => {
-	const dailyCurrentPlanRate = currentPlanPrice / totalDaysInCycle;
-	const dailyNewPlanRate = newPlanPrice / totalDaysInCycle;
-
-	// Amount used from the current plan
-	const amountUsed = dailyCurrentPlanRate * daysUsed;
-
-	// Remaining days in the cycle
-	const remainingDays = totalDaysInCycle - daysUsed;
-
-	// New plan amount for the remaining days
-	const newPlanAmount = dailyNewPlanRate * remainingDays;
-
-	// Calculate the final prorated amount
-	return newPlanAmount - amountUsed;
-};
-
-export const processPayment = async (payment: Payment): Promise<{ success: boolean; message: string; statusCode: number }> => {
-	return mockProcessPayment(payment);
-};
-
-const mockProcessPayment = async (payment: Payment): Promise<{ success: boolean; message: string; statusCode: number }> => {
-	// Simulate random payment processing behavior
+export const processWithPaymentProcessor = async (
+	payment: Payment
+): Promise<{ success: boolean; message: string; statusCode: number; transactionId?: string }> => {
+	// Here you would integrate with the payment processor API (e.g., Stripe, PayPal)
+	// This is just a simulation
 	const randomOutcome = Math.random();
 
 	if (randomOutcome < 0.7) {
 		// 70% chance of success
-		return { success: true, message: 'Payment has been successful.', statusCode: 200 };
+		return { success: true, message: 'Payment has been successful.', statusCode: 200, transactionId: crypto.randomUUID() };
 	} else if (randomOutcome < 0.9) {
 		// 20% chance of failure
 		return { success: false, message: 'Payment failed due to insufficient funds.', statusCode: 402 };
@@ -36,3 +18,37 @@ const mockProcessPayment = async (payment: Payment): Promise<{ success: boolean;
 		return { success: false, message: 'Payment requires additional authentication.', statusCode: 401 };
 	}
 };
+
+function calculateProratedAmount(
+	currentPrice: number,
+	currentBillingCycleDays: number,
+	planStartDate: Date,
+	newPrice: number,
+	newBillingCycleDays: number
+): number {
+	// Calculate the number of days used since the plan was created
+	const today = new Date();
+	const timeDiff = today.getTime() - planStartDate.getTime();
+	const daysUsed = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+	// Calculate remaining days in the current billing cycle
+	const daysRemaining = currentBillingCycleDays - daysUsed;
+
+	if (daysRemaining < 0) {
+		throw new Error('The current billing cycle has already ended.');
+	}
+
+	// Calculate the daily rate for the current plan
+	const currentDailyRate = currentPrice / currentBillingCycleDays;
+
+	// Calculate the prorated amount for the remaining days on the current plan
+	const currentPlanRemainingAmount = currentDailyRate * daysRemaining;
+
+	// Calculate the full amount for the new plan's billing cycle
+	const newPlanAmount = newPrice;
+
+	// Calculate the prorated change
+	const proratedChange = newPlanAmount - currentPlanRemainingAmount;
+
+	return proratedChange;
+}
