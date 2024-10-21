@@ -1,6 +1,6 @@
 import { Context } from 'hono';
 import { Payment } from '../models';
-import { processPayment } from '../services/billing-service';
+import { processWithPaymentProcessor } from '../services/billing-service';
 
 const createPayment = async (c: Context) => {
 	try {
@@ -20,13 +20,14 @@ const createPayment = async (c: Context) => {
 		await kv.put(payment.id, JSON.stringify(payment));
 
 		// Process the payment [mocked]
-		const { success, message, statusCode } = await processPayment(payment);
+		const { success, message, statusCode, transactionId } = await processWithPaymentProcessor(payment);
 
 		return c.json(
 			{
 				success: success,
 				message: message,
 				payment,
+				transactionId: success ? transactionId : null,
 			},
 			{ status: statusCode }
 		);

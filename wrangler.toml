@@ -13,6 +13,20 @@ kv_namespaces = [
     { binding = "PAYMENT_KV", id = "${PAYMENT_KV_ID}" },
 ]
 
+[env.dev.durable_objects]
+bindings = [
+    { name = "SIMPLE_DO", class_name = "SimpleDO" }
+]
+
+[[migrations]]
+tag = "v1" # Should be unique for each entry
+new_classes = ["SimpleDO"]
+
+
+#[durable_objects]
+#bindings = [
+#    { name = "BILLING_CYCLE", class_name = "BillingCycle" }]
+
 
 [build]
 command = "npm install"
@@ -25,22 +39,27 @@ workers_dev = false
 #id = "${CUSTOMER_KV_ID}"
 
 #[[kv_namespaces]]
-#binding = "SUBSCRIPTION_KV"
+#binding = "SUBSCRIPTION_PLAN_KV"
 #id = "${SUBSCRIPTION_KV_ID}"
+
 
 #[[kv_namespaces]]
 #binding = "INVOICE_KV"
 #id = "${INVOICE_KV_ID}"
 
+
 #[[kv_namespaces]]
 #binding = "PAYMENT_KV"
 #id = "${PAYMENT_KV_ID}"
+
 
 #[[durable_objects.bindings]]
 #name = "MyDurableObject"
 #class_name = "MyDurableObject"
 
+
 #[env.dev]
+
 
 #watch = ["src/**/*.js", "src/**/*.ts"]
 #ignore = ["node_modules/**"]
