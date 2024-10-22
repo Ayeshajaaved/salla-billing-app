@@ -1,3 +1,4 @@
+import { BillingCycle } from '../durable_objects/billing-do';
 import { Customer } from '../models';
 import { Context } from 'hono';
 
@@ -147,6 +148,10 @@ const assignSubscriptionPlanToCustomer = async (c: Context) => {
 
 		// Save the updated customer back to KV
 		await customerKv.put(customerId, JSON.stringify(customer));
+
+		//// Initialize the billing cycle
+		//const billingCycle = new BillingCycle(c.state, c.env);
+		//await billingCycle.initialize(customerId, nextBillingDate); // Call the initialize method
 
 		return c.json({ success: true, message: 'Subscription plan assigned to customer successfully!', customer });
 	} catch (error) {

@@ -15,7 +15,8 @@ kv_namespaces = [
 
 [env.dev.durable_objects]
 bindings = [
-    { name = "SIMPLE_DO", class_name = "SimpleDO" }
+    { name = "SIMPLE_DO", class_name = "SimpleDO" },
+    { name = "BILLING_DO", class_name = "BillingCycle" }
 ]
 
 [[migrations]]

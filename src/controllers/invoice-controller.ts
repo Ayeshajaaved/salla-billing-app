@@ -1,15 +1,13 @@
 import { Context } from 'hono';
 import { Invoice } from '../models';
+import { InvoiceService } from '../services/invoice-service';
 
 const generateInvoice = async (c: Context) => {
+	const invoiceService = new InvoiceService(c.env);
 	try {
-		const kv = c.env.INVOICE_KV as KVNamespace;
 		const invoice: Invoice = await c.req.json();
-		invoice.id = crypto.randomUUID();
-
-		await kv.put(invoice.id, JSON.stringify(invoice));
-
-		return c.json({ success: true, message: 'Invoice created successfully', invoice });
+		const createdInvoice = await invoiceService.generateInvoice(invoice);
+		return c.json({ success: true, message: 'Invoice created successfully', invoice: createdInvoice });
 	} catch (error) {
 		return new Response(`Error generating invoice: ${(error as Error).message}`, { status: 500 });
 	}
