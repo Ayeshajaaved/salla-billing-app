@@ -20,7 +20,10 @@ import {
 } from './controllers';
 
 import { SimpleDO } from './durable_objects/simple-object';
-import { BillingCycle } from './durable_objects/billing-do';
+import { BillingCycle } from './durable_objects/billing-cycle-do';
+//import { Env } from './types';
+import cronHandler from './cron';
+
 const app = new Hono();
 
 app.get('/test', (c: Context) => {
@@ -50,79 +53,86 @@ app.get('/api/invoices/customer/:customerId', listInvoicesByCustomer);
 app.post('/api/payments', createPayment);
 app.get('/api/payments/:id', getPayment);
 
-app.get('/test-do', async (c: Context) => {
+app.post('/test-scheduled', async (c) => {
+	const testEvent = { cron: '*/1 * * * *' }; // Simulate the cron you want to test
+	await scheduled(testEvent as ScheduledEvent); // Call the scheduled function manually
+	return c.text('Test scheduled job executed.');
+});
+
+app.post('/test-do', async (c: Context) => {
 	try {
-			console.log('Available Environment:', c.env);
-			const id = c.env.SIMPLE_DO.newUniqueId();
-			const doInstance = c.env.SIMPLE_DO.get(id);
-			const response = await doInstance.fetch(new Request(c.req.url, { method: c.req.method }));
-			return response;
+		console.log('Available Environment:', c.env);
+
+		const billingCycleId = c.env.BILLING_CYCLE.newUniqueId();
+		console.log('Billing Cycle ID POST:', billingCycleId.toString());
+
+		const billingCycleInstance = c.env.BILLING_CYCLE.get(billingCycleId);
+		console.log('Billing Cycle Instance:', billingCycleInstance.toString());
+
+		const response = await billingCycleInstance.fetch(
+			new Request(c.req.url, { method: 'POST', body: JSON.stringify({ name: 'Monthly Plan', price: 10 }) })
+		);
+
+		const responseData = await response.text();
+		console.log('Response:', responseData);
+
+		return new Response('Billing cycle created', { status: 200 });
 	} catch (error) {
-			console.error(`Error fetching durable object: ${(error as Error).message}`);
-			return new Response(`Error fetching durable object: ${(error as Error).message}`, { status: 500 });
+		console.error(`Error creating billing cycle: ${(error as Error).message}`);
+		return new Response(`Error: ${(error as Error).message}`, { status: 500 });
 	}
 });
 
+app.get('/test-do/:id', async (c: Context) => {
+	try {
+		const billingCycleId = c.req.param('id'); // Get ID from request parameters
+		console.log('Billing Cycle ID GET:', billingCycleId);
 
+		// Convert string ID into a DurableObjectId
+		const durableObjectId = c.env.BILLING_CYCLE.idFromString(billingCycleId);
 
-//app.post('/api/billing-cycles', async (c: Context) => {
-//	try {
-//		const requestData = await c.req.json();
-//		const durableObjectId = c.env.BILLING_CYCLE.idFromName(requestData.customerId);
-//		const durableObjectStub = c.env.BILLING_CYCLE.get(durableObjectId);
-//		return await durableObjectStub.fetch(c.req);
-//	} catch (error) {
-//		return new Response(`Error creating billing cycle: ${(error as Error).message}`, { status: 500 });
-//	}
-//});
+		// Retrieve the Durable Object using the ID
+		const billingCycleInstance = c.env.BILLING_CYCLE.get(durableObjectId);
 
-//app.post('/api/billing-cycles', async (c: Context) => {
-//	try {
-//		const { customerId } = await c.req.json(); // Extract customerId from the request body
-//		const durableObjectId = c.env.BILLING_CYCLE.idFromName(customerId);
-//		const durableObjectStub = c.env.BILLING_CYCLE.get(durableObjectId);
+		// Fetch data from the Durable Object
+		const response = await billingCycleInstance.fetch(c.req.url);
+		const data = await response.json();
 
-//		return await durableObjectStub.createBillingCycle(c.req);
-//	} catch (error) {
-//		return new Response(`Error creating billing cycle: ${(error as Error).message}`, { status: 500 });
-//	}
-//});
+		console.log('Retrieved Billing Cycle Data:', data);
 
-//app.post('/api/billing-cycles', async (c: Context) => {
-//	try {
-//		const { customerId } = await c.req.json();
-//		console.log('customerId:', customerId);
-
-//		console.log('Env:', c.env);
-//    console.log('BILLING_CYCLE:', c.env.BILLING_CYCLE);
-
-//		const durableObjectId = c.env.BILLING_CYCLE.idFromName(customerId);
-//		const durableObjectStub = c.env.BILLING_CYCLE.get(durableObjectId);
-		
-//		return await durableObjectStub.fetch(c.req);
-//	} catch (error) {
-//		return new Response(`Error creating billing cycle: ${(error as Error).message}`, { status: 500 });
-//	}
-//});
-
-
-//app.get('/api/billing-cycles', async (c: Context) => {
-//	const customerId = c.req.query('customerId');
-//	const durableObjectId = c.env.BILLING_CYCLE.idFromName(customerId);
-//	const durableObjectStub = c.env.BILLING_CYCLE.get(durableObjectId);
-//	return await durableObjectStub.fetch(c.req);
-//});
+		return new Response(JSON.stringify(data), { status: 200 });
+	} catch (error) {
+		console.error(`Error fetching billing cycle: ${(error as Error).message}`);
+		return new Response(`Error fetching billing cycle: ${(error as Error).message}`, { status: 500 });
+	}
+});
 
 app.all('*', (c) => {
 	return c.text('The provided endpoint is not registered or does not exist.', { status: 404 });
 });
-
-export { SimpleDO, BillingCycle };
-
-export default app;
 
 // Fetch event
 addEventListener('fetch', (event) => {
 	event.respondWith(app.fetch(event.request));
 });
 
+export const scheduled = async (event: ScheduledEvent) => {
+	console.log(`Scheduled event triggered: ${event.cron}`);
+
+	switch (event.cron) {
+		case '*/1 * * * *':
+			console.log('Cron job processed');
+			break;
+		//case '0 0 * * *':
+		//		await fetchCustomers();
+		//		break;
+		//case '0 0 */2 * *':
+		//		await logTask();
+		//		break;
+		default:
+			console.warn(`No scheduled job found for: ${event.cron}`);
+	}
+};
+
+export { SimpleDO, BillingCycle };
+export default app;

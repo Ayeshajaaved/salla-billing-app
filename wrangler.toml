@@ -16,13 +16,25 @@ kv_namespaces = [
 [env.dev.durable_objects]
 bindings = [
     { name = "SIMPLE_DO", class_name = "SimpleDO" },
-    { name = "BILLING_DO", class_name = "BillingCycle" }
+    { name = "BILLING_CYCLE", class_name = "BillingCycle" }
 ]
 
 [[migrations]]
 tag = "v1" # Should be unique for each entry
 new_classes = ["SimpleDO"]
 
+[[migrations]]
+tag = "v1" # Should be unique for each entry
+new_classes = ["BillingCycle"]
+
+[triggers]
+crons = ["*/1 * * * *"] # every minute
+
+
+# need to see if i need migrations or not
+#[[migrations]]
+#tag = "v1" # Should be unique for each entry
+#new_classes = ["BillingDO"]
 
 #[durable_objects]
 #bindings = [

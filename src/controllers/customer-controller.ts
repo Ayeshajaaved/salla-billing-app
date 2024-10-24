@@ -1,11 +1,17 @@
-import { BillingCycle } from '../durable_objects/billing-do';
+import { BillingCycle } from '../durable_objects/billing-cycle-do';
 import { Customer } from '../models';
 import { Context } from 'hono';
+import { isValidCustomer } from '../services/customer-service';
 
 const createCustomer = async (c: Context) => {
 	try {
 		const kv = c.env.CUSTOMER_KV as KVNamespace;
 		const customer: Customer = await c.req.json();
+
+		if (!isValidCustomer(customer)) {
+			return new Response('Failed to create a new customer: Invalid/Incomplete customer data.', { status: 400 });
+		}
+
 		customer.id = crypto.randomUUID();
 		await kv.put(customer.id, JSON.stringify(customer));
 
@@ -117,6 +123,7 @@ const assignSubscriptionPlanToCustomer = async (c: Context) => {
 	try {
 		const kv = c.env.SUBSCRIPTION_PLAN_KV as KVNamespace;
 		const customerKv = c.env.CUSTOMER_KV as KVNamespace;
+		const subscriptionPlanKv = c.env.SUBSCRIPTION_PLAN_KV as KVNamespace;
 
 		const customerId = c.req.param('customerId');
 		if (!customerId) {
@@ -128,30 +135,58 @@ const assignSubscriptionPlanToCustomer = async (c: Context) => {
 			return new Response('SubscriptionPlanId is missing or invalid.', { status: 400 });
 		}
 
-		const customerData = await customerKv.get(customerId);
-		if (!customerData) {
-			return c.json({ success: false, message: 'Customer not found' }, 404);
-		}
+		const [customerData, subscriptionPlanData] = await Promise.all([customerKv.get(customerId), kv.get(subscriptionPlanId)]);
 
-		
+		if (!customerData || !subscriptionPlanData) {
+			throw new Error('Customer or subscription plan not found');
+		}
 
 		const customer: Customer = JSON.parse(customerData);
-
-		const subscriptionPlanData = await kv.get(subscriptionPlanId);
-		if (!subscriptionPlanData) {
-			return c.json({ success: false, message: 'Subscription plan not found' }, 404);
-		}
-
-		// Update the customer's subscription details
 		customer.currentSubscriptionPlanId = subscriptionPlanId;
 		customer.subscriptionStatus = 'active';
-
-		// Save the updated customer back to KV
 		await customerKv.put(customerId, JSON.stringify(customer));
 
-		//// Initialize the billing cycle
-		//const billingCycle = new BillingCycle(c.state, c.env);
-		//await billingCycle.initialize(customerId, nextBillingDate); // Call the initialize method
+		console.log('Updated Customer:', customer);
+
+		console.log('Available Billing Environment:', c.env.BILLING_CYCLE);
+
+		//const billingCycleId = c.env.BILLING_CYCLE.idFromString(subscriptionPlanId);
+		//console.log('Billing Cycle ID:', billingCycleId);
+
+		//const billingCycleInstance = c.env.BILLING_CYCLE.get(billingCycleId);
+		//console.log('Billing Cycle Instance:', billingCycleInstance);
+
+		//const billingCycleId = c.env.BILLING_CYCLE.newUniqueId();
+		//console.log('Billing Cycle ID:', billingCycleId);
+
+		//await c.env.SUBSCRIPTION_PLAN_KV.put(subscriptionPlanId, billingCycleId.toString());
+
+		//// Create or update the billing cycle in Durable Object
+		//const response = await billingCycleInstance.fetch(
+		//	new Request(c.req.url, { method: 'POST', body: JSON.stringify({ subscriptionPlanId, customerId }) })
+		//);
+		//const billingCycleData = await response.json();
+
+		//if (!billingCycleData.ok) {
+		//	throw new Error('Failed to initialize billing cycle');
+		//}
+
+		/// Generate a new Billing Cycle ID and store it in the KV with the subscriptionPlanId as the key
+		const billingCycleId = c.env.BILLING_CYCLE.newUniqueId();
+		await subscriptionPlanKv.put(subscriptionPlanId, billingCycleId.toString());
+
+		// Fetch the Durable Object instance using the stored Billing Cycle ID
+		const billingCycleInstance = c.env.BILLING_CYCLE.get(billingCycleId);
+
+		// Create or update the billing cycle in Durable Object
+		const response = await billingCycleInstance.fetch(
+			new Request(c.req.url, { method: 'POST', body: JSON.stringify({ subscriptionPlanId, customerId }) })
+		);
+		const billingCycleData = await response.json();
+
+		if (!billingCycleData.success) {
+			throw new Error('Failed to initialize billing cycle');
+		}
 
 		return c.json({ success: true, message: 'Subscription plan assigned to customer successfully!', customer });
 	} catch (error) {

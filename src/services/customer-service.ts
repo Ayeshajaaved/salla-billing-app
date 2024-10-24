@@ -23,3 +23,7 @@ export const getCustomerFromKV = async (kv: KVNamespace, customerId: string): Pr
 		throw new Error('Could not retrieve customer data');
 	}
 };
+
+export const isValidCustomer = (customer: any): customer is Customer => {
+	return typeof customer.name === 'string' && typeof customer.email === 'string';
+};

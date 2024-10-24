@@ -1,5 +1,7 @@
 import { Context } from 'hono';
 
+// plan id: a80a0574-4169-4272-bc1d-c69bfa4dab1d
+//customer id: 7fcb8dbc-6f7e-4bf7-b365-ba114966dcb2
 const createSubscriptionPlan = async (c: Context) => {
 	try {
 		const kv = c.env.SUBSCRIPTION_PLAN_KV as KVNamespace;
@@ -96,10 +98,4 @@ const deleteSubscriptionPlan = async (c: Context) => {
 	}
 };
 
-export {
-	createSubscriptionPlan,
-	getAllSubscriptionPlans,
-	getSubscriptionPlan,
-	updateSubscriptionPlan,
-	deleteSubscriptionPlan,
-};
+export { createSubscriptionPlan, getAllSubscriptionPlans, getSubscriptionPlan, updateSubscriptionPlan, deleteSubscriptionPlan };
